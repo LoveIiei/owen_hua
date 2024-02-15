@@ -2,11 +2,10 @@
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
+
 
 require 'inc/PHPMailer.php';
 require 'inc/SMTP.php';
-require 'inc/Exception.php';
 
 if ($_POST) {
 
@@ -35,6 +34,7 @@ if ($_POST) {
     if (!$error) {
 
         $mail = new PHPMailer(true);
+        $mail->SMTPDebug = SMTP::DEBUG_SERVER;
 
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
@@ -42,7 +42,7 @@ if ($_POST) {
         $mail->Username = 'owentest563@gmail.com';
         $mail->Password = 'aivivi1314';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        $mail->Port       = 587;
+        $mail->Port       = 465;
 
         $mail->From = $email;
         $mail->FromName = $name;
@@ -52,6 +52,8 @@ if ($_POST) {
 
         $mail->Subject = $subject;
         $mail->Body    = $contact_message;
+
+        $mail->send();
 
         if (!$mail->send()) {
             echo 'Message could not be sent.';
