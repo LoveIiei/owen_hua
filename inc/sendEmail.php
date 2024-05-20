@@ -6,14 +6,16 @@ use PHPMailer\PHPMailer\Exception;
 
 require 'inc/PHPMailer.php';
 require 'inc/SMTP.php';
-require 'inc/Exception.php'; // Ensure Exception class is also included
+require 'inc/Exception.php';
 
-if ($_POST) {
-    // Sanitize and validate input
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     $name = trim(stripslashes($_POST['contactName']));
     $email = trim(stripslashes($_POST['contactEmail']));
     $subject = trim(stripslashes($_POST['contactSubject']));
     $contact_message = trim(stripslashes($_POST['contactMessage']));
+
+    $error = [];
 
     // Check Name
     if (strlen($name) < 2) {
@@ -24,7 +26,7 @@ if ($_POST) {
         $error['email'] = "Please enter a valid email address.";
     }
     // Check Message
-    if (strlen($contact_message) < 15) { // Adjusted the length check based on your error message
+    if (strlen($contact_message) < 15) {
         $error['message'] = "Please enter your message. It should have at least 15 characters.";
     }
     // Subject
@@ -46,7 +48,7 @@ if ($_POST) {
             $mail->Port = 465;
 
             $mail->setFrom($email, $name);
-            $mail->addAddress('scaresneeze@gmail.com');
+            $mail->addAddress('owentest563@gmail.com');
 
             $mail->isHTML(true);
             $mail->Subject = $subject;
@@ -70,4 +72,7 @@ if ($_POST) {
         }
         echo $response;
     }
+} else {
+    echo 'Invalid request method.';
 }
+
