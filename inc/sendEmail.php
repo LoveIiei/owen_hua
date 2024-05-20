@@ -2,13 +2,14 @@
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
-
+use PHPMailer\PHPMailer\Exception;
 
 require 'inc/PHPMailer.php';
 require 'inc/SMTP.php';
+require 'inc/Exception.php'; // Ensure Exception class is also included
 
 if ($_POST) {
-
+    // Sanitize and validate input
     $name = trim(stripslashes($_POST['contactName']));
     $email = trim(stripslashes($_POST['contactEmail']));
     $subject = trim(stripslashes($_POST['contactSubject']));
@@ -19,11 +20,11 @@ if ($_POST) {
         $error['name'] = "Please enter your name.";
     }
     // Check Email
-    if (!preg_match('/^[a-z0-9&\'\.\-_\+]+@[a-z0-9\-]+\.([a-z0-9\-]+\.)*+[a-z]{2}/is', $email)) {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error['email'] = "Please enter a valid email address.";
     }
     // Check Message
-    if (strlen($contact_message) < 2) {
+    if (strlen($contact_message) < 15) { // Adjusted the length check based on your error message
         $error['message'] = "Please enter your message. It should have at least 15 characters.";
     }
     // Subject
@@ -31,43 +32,42 @@ if ($_POST) {
         $subject = "Contact Form Submission";
     }
 
-    if (!$error) {
+    if (empty($error)) {
+        try {
+            $mail = new PHPMailer(true);
+            $mail->SMTPDebug = SMTP::DEBUG_SERVER; // Enable verbose debug output
 
-        $mail = new PHPMailer(true);
-        $mail->SMTPDebug = SMTP::DEBUG_SERVER;
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
+            $mail->Username = 'owentest563@gmail.com';
+            $mail->Password = 'aivivi1314';
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+            $mail->Port = 465;
 
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'owentest563@gmail.com';
-        $mail->Password = 'aivivi1314';
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        $mail->Port       = 465;
+            $mail->setFrom($email, $name);
+            $mail->addAddress('scaresneeze@gmail.com');
 
-        $mail->From = $email;
-        $mail->FromName = $name;
-        $mail->addAddress('scaresneeze@gmail.com');
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = $contact_message;
 
-        $mail->isHTML(true);
-
-        $mail->Subject = $subject;
-        $mail->Body    = $contact_message;
-
-        $mail->send();
-
-        if (!$mail->send()) {
-            echo 'Message could not be sent.';
-            echo 'Mailer Error: ' . $mail->ErrorInfo;
-        } else {
+            $mail->send();
             echo 'Message has been sent';
+        } catch (Exception $e) {
+            echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
         }
     } else {
-
-        $response = (isset($error['name'])) ? $error['name'] . "<br /> \n" : null;
-        $response .= (isset($error['email'])) ? $error['email'] . "<br /> \n" : null;
-        $response .= (isset($error['message'])) ? $error['message'] . "<br />" : null;
-
+        $response = '';
+        if (isset($error['name'])) {
+            $response .= $error['name'] . "<br /> \n";
+        }
+        if (isset($error['email'])) {
+            $response .= $error['email'] . "<br /> \n";
+        }
+        if (isset($error['message'])) {
+            $response .= $error['message'] . "<br />";
+        }
         echo $response;
-    } # end if - there was a validation error
-
+    }
 }
